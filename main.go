@@ -19,6 +19,7 @@ func main () {
 	users[3] = map[string]string{"id":"126", "name":"Dick"}
 
 	connection := client.NewConnection("127.0.0.1", "6000")
+
 	db := connection.Database("tmj")
 	table := db.Table("users")
 	for _, user := range users {
@@ -29,4 +30,5 @@ func main () {
 		}
 		record.Create()
 	}
+	connection.Receive()
 }

@@ -28,8 +28,9 @@ func (record *Record) Create () error {
 		return err
 	}
 
+
 	command := NewCommand("c", record)
-	transmit(record.table.db.connection.conn, command)
+	transmit(record.table.db.connection.socket, command)
 
 	return nil
 }
