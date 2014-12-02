@@ -1,7 +1,8 @@
 package main
 
 import (
-	//"encoding/binary"
+	"fmt"
+	"time"
 	"github.com/talentedmrjones/godb-client/client"
 )
 
@@ -22,13 +23,15 @@ func main () {
 
 	db := connection.Database("tmj")
 	table := db.Table("users")
+	start := time.Now()
 	for _, user := range users {
-
+		fmt.Printf("creating %v\n", user)
 		record := table.NewRecord()
 		for field, value := range user {
 			record.SetFieldString(field, value)
 		}
-		record.Create()
+		reply := record.Create()
+		fmt.Printf("id: %s, status: %v, error: %s\n", reply.Id, reply.Status, reply.Error)
 	}
-	connection.Receive()
+	fmt.Printf("%v records in %s\n", len(users), time.Since(start))
 }

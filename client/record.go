@@ -1,7 +1,7 @@
 package client
 
 import (
-	"errors"
+	//"errors"
 	"encoding/binary"
 )
 
@@ -20,17 +20,21 @@ func (record *Record) SetFieldUint32 (field string, value uint32) {
 	record.data[field] = valueBuffer
 }
 
-func (record *Record) Create () error {
+func (record *Record) Create () *Reply {
 	// ensure data includes "id" key
 
 	if _, dataIdExists := record.data["id"]; !dataIdExists {
-		err := errors.New("ID_MISSING")
-		return err
+		reply := &Reply{}
+		reply.Error = "ID_MISSING"
+		return reply
 	}
 
 
 	command := NewCommand("c", record)
+	record.table.db.connection.replies[command.Id] = make(chan *Reply)
 	transmit(record.table.db.connection.socket, command)
 
-	return nil
+	reply := <- record.table.db.connection.replies[command.Id]
+
+	return reply
 }

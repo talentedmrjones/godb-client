@@ -12,8 +12,8 @@ import (
 
 type Connection struct {
 	socket net.Conn
+	replies map[string]chan *Reply
 }
-
 
 func NewConnection (address, port string) (*Connection) {
 
@@ -22,8 +22,8 @@ func NewConnection (address, port string) (*Connection) {
 		// handle error here
 	}
 
-	connection := &Connection{conn}
-
+	connection := &Connection{conn, make(map[string]chan *Reply)}
+	go connection.receive()
 	return connection
 }
 
@@ -32,10 +32,10 @@ func (connection *Connection) Database (dbName string) *Database {
 }
 
 // Receive continuously looks for data from the socket and relays that to a table's command channel
-func (connection *Connection) Receive() {
+func (connection *Connection) receive() {
 	// create a buffered reader
 	buf := bufio.NewReader(connection.socket)
-
+	defer connection.socket.Close()
 	// loop forever
 	for {
 		// read the first 4 bytes
@@ -51,7 +51,7 @@ func (connection *Connection) Receive() {
 
 		// prepare a buffer to read the data
 		payloadBytes := make([]byte, dataSize)
-		// read data
+		// read a number of bytes equal to the size of the buffer
 		numDataBytes, err := buf.Read(payloadBytes)
 		if uint32(numDataBytes)<dataSize || err != nil {
 			// report error here
@@ -69,8 +69,8 @@ func (connection *Connection) Receive() {
 			fmt.Printf("decode: %s\n", err)
 		}
 
-		fmt.Printf("Reply %#v\n", reply)
+		//fmt.Printf("Reply %#v\n", reply)
 
-		// deliver reply to calling func
+		connection.replies[reply.Id]<- reply
 	}
 }
