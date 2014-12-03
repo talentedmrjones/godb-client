@@ -30,8 +30,8 @@ func main () {
 		for field, value := range user {
 			record.SetFieldString(field, value)
 		}
-		reply := record.Create()
-		fmt.Printf("id: %s, status: %v, error: %s\n", reply.Id, reply.Status, reply.Error)
+		err, record := record.Create()
+		fmt.Printf("%v %v\n", err, record)
 	}
 	fmt.Printf("%v records in %s\n", len(users), time.Since(start))
 }

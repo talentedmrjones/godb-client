@@ -3,11 +3,13 @@ package client
 import (
 	//"errors"
 	"encoding/binary"
+	"github.com/twinj/uuid"
 )
 
 type Record struct {
-	table	*Table
-	data	map[string][]byte
+	table		*Table
+	data		map[string][]byte
+	action	string
 }
 
 func (record *Record) SetFieldString (field string, value string) {
@@ -20,21 +22,18 @@ func (record *Record) SetFieldUint32 (field string, value uint32) {
 	record.data[field] = valueBuffer
 }
 
-func (record *Record) Create () *Reply {
-	// ensure data includes "id" key
+func (record *Record) Create () (*Reply, *Record) {
 
+	// ensure data includes "id" key
 	if _, dataIdExists := record.data["id"]; !dataIdExists {
-		reply := &Reply{}
-		reply.Error = "ID_MISSING"
-		return reply
+		// if not make it unique
+		record.SetFieldString("id", uuid.NewV4().String())
 	}
 
+	record.action = "c"
 
-	command := NewCommand("c", record)
-	record.table.db.connection.replies[command.Id] = make(chan *Reply)
-	transmit(record.table.db.connection.socket, command)
+	reply := transmit(record)
 
-	reply := <- record.table.db.connection.replies[command.Id]
+	return reply, record
 
-	return reply
 }

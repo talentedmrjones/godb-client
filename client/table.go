@@ -6,5 +6,5 @@ type Table struct {
 }
 
 func (table *Table) NewRecord () *Record {
-	return &Record{table, make(map[string][]byte)}
+	return &Record{table, make(map[string][]byte), ""}
 }
