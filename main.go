@@ -25,13 +25,12 @@ func main () {
 	table := db.Table("users")
 	start := time.Now()
 	for _, user := range users {
-		fmt.Printf("creating %v\n", user)
 		record := table.NewRecord()
 		for field, value := range user {
 			record.SetFieldString(field, value)
 		}
-		err, record := record.Create()
-		fmt.Printf("%v %v\n", err, record)
+		err, status := record.Create()
+		fmt.Printf("%v %v\n", status, err)
 	}
 	fmt.Printf("%v records in %s\n", len(users), time.Since(start))
 }

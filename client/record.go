@@ -1,7 +1,7 @@
 package client
 
 import (
-	//"errors"
+	"errors"
 	"encoding/binary"
 	"github.com/twinj/uuid"
 )
@@ -22,7 +22,31 @@ func (record *Record) SetFieldUint32 (field string, value uint32) {
 	record.data[field] = valueBuffer
 }
 
-func (record *Record) Create () (*Reply, *Record) {
+// Create write a record to the server
+func (record *Record) Create () (error, uint16) {
+
+	// ensure data includes "id" key
+	if _, dataIdExists := record.data["id"]; !dataIdExists {
+		// if not make it unique
+		record.SetFieldString("id", uuid.NewV4().String())
+	}
+
+	record.action = "c"
+
+	reply := transmit(record)
+	var err error
+	if reply.Error != "" {
+		err = errors.New(reply.Error)
+	} else {
+		err = nil
+	}
+	return err, reply.Status
+
+}
+
+
+// Read querys the server
+func (record *Record) Read () (*Reply, *Record) {
 
 	// ensure data includes "id" key
 	if _, dataIdExists := record.data["id"]; !dataIdExists {
