@@ -27,10 +27,23 @@ func main () {
 	for _, user := range users {
 		record := table.NewRecord()
 		for field, value := range user {
-			record.SetFieldString(field, value)
+			record.SetString(field, value)
 		}
-		err, status := record.Create()
-		fmt.Printf("%v %v\n", status, err)
+		reply := record.Create()
+		fmt.Printf("%v\n", reply.Status)
 	}
-	fmt.Printf("%v records in %s\n", len(users), time.Since(start))
+
+	fmt.Printf("created %v records in %s\n", len(users), time.Since(start))
+
+	start = time.Now()
+	for _, user := range users {
+		record := table.NewRecord()
+		for field, value := range user {
+			record.SetString(field, value)
+		}
+		reply := record.Read()
+		result := reply.Result[0]
+		fmt.Printf("%v %v\n", result.String("id"), result.String("name"))
+	}
+	fmt.Printf("read %v records in %s\n", len(users), time.Since(start))
 }

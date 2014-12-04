@@ -10,10 +10,6 @@ import (
 
 )
 
-type Connection struct {
-	socket net.Conn
-	replies map[string]chan *Reply
-}
 
 func NewConnection (address, port string) (*Connection) {
 

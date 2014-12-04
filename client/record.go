@@ -1,63 +1,49 @@
 package client
 
 import (
-	"errors"
+	//"errors"
 	"encoding/binary"
 	"github.com/twinj/uuid"
 )
 
-type Record struct {
-	table		*Table
-	data		map[string][]byte
-	action	string
+func (record *Record) String(field string) string {
+	return string(record.Data[field])
 }
 
-func (record *Record) SetFieldString (field string, value string) {
-	record.data[field] = []byte(value)
+func (record *Record) SetString (field string, value string) {
+	record.Data[field] = []byte(value)
 }
 
-func (record *Record) SetFieldUint32 (field string, value uint32) {
+func (record *Record) SetUint32 (field string, value uint32) {
 	valueBuffer := make([]byte, 4)
 	binary.BigEndian.PutUint32(valueBuffer, value)
-	record.data[field] = valueBuffer
+	record.Data[field] = valueBuffer
 }
 
 // Create write a record to the server
-func (record *Record) Create () (error, uint16) {
+func (record *Record) Create () *Reply {
 
 	// ensure data includes "id" key
-	if _, dataIdExists := record.data["id"]; !dataIdExists {
+	if _, dataIdExists := record.Data["id"]; !dataIdExists {
 		// if not make it unique
-		record.SetFieldString("id", uuid.NewV4().String())
+		record.SetString("id", uuid.NewV4().String())
 	}
 
 	record.action = "c"
 
 	reply := transmit(record)
-	var err error
-	if reply.Error != "" {
-		err = errors.New(reply.Error)
-	} else {
-		err = nil
-	}
-	return err, reply.Status
+	return reply
 
 }
 
 
 // Read querys the server
-func (record *Record) Read () (*Reply, *Record) {
+func (record *Record) Read () *Reply {
 
-	// ensure data includes "id" key
-	if _, dataIdExists := record.data["id"]; !dataIdExists {
-		// if not make it unique
-		record.SetFieldString("id", uuid.NewV4().String())
-	}
-
-	record.action = "c"
+	record.action = "r"
 
 	reply := transmit(record)
 
-	return reply, record
+	return reply
 
 }
