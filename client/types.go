@@ -22,16 +22,20 @@ type Database struct {
 	name 				string
 }
 
-// type Query struct {
-// 	table		*Table
-// 	Data		map[string][]byte
-// 	action	string
-// }
 
-type Record struct {
+
+type Patient struct {
 	table		*Table
 	Data		map[string][]byte
 	action	string
+}
+
+type Query struct {
+	Patient
+}
+
+type Record struct {
+	Patient
 }
 
 type Records []Record

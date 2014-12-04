@@ -4,14 +4,14 @@ import (
 	"github.com/twinj/uuid"
 )
 
-func NewCommand (command string, record *Record) *Command {
+func NewCommand (command string, patient *Patient) *Command {
 
 	id := uuid.NewV4()
 	return &Command{
 		id.String(),
 		command,
-		record.table.db.name,
-		record.table.name,
-		record.Data,
+		patient.table.db.name,
+		patient.table.name,
+		patient.Data,
 	}
 }

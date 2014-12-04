@@ -8,10 +8,10 @@ import (
 )
 
 // decoupling this from command so we can make use of connection pooling later
-func transmit (record *Record) *Reply {
+func transmit (patient *Patient) *Reply {
 
-	command := NewCommand(record.action, record)
-	record.table.db.connection.replies[command.Id] = make(chan *Reply)
+	command := NewCommand(patient.action, patient)
+	patient.table.db.connection.replies[command.Id] = make(chan *Reply)
 
 	// gob encode payload
 	var payloadEncodingBuffer bytes.Buffer
@@ -27,9 +27,9 @@ func transmit (record *Record) *Reply {
 	dataSize := make([]byte,4)
 	binary.BigEndian.PutUint32(dataSize, uint32(len(payloadBytes)))
 
-	record.table.db.connection.socket.Write(dataSize)
-	record.table.db.connection.socket.Write(payloadBytes)
+	patient.table.db.connection.socket.Write(dataSize)
+	patient.table.db.connection.socket.Write(payloadBytes)
 
-	reply := <- record.table.db.connection.replies[command.Id]
+	reply := <- patient.table.db.connection.replies[command.Id]
 	return reply
 }
