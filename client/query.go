@@ -5,7 +5,7 @@ func (query *Query) Find () *Reply {
 
 	query.action = "r"
 
-	reply := transmit(&query.Patient)
+	reply := transmit(query.Patient)
 
 	return reply
 

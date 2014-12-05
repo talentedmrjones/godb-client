@@ -8,7 +8,7 @@ import (
 )
 
 // decoupling this from command so we can make use of connection pooling later
-func transmit (patient *Patient) *Reply {
+func transmit (patient Patient) *Reply {
 
 	command := NewCommand(patient.action, patient)
 	patient.table.db.connection.replies[command.Id] = make(chan *Reply)

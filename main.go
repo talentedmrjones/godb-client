@@ -18,22 +18,24 @@ func main () {
 
 	start := time.Now()
 
-	user := table.NewRecord()
-	user.SetString("name", "Julia")
-	user.SetUint32("age", 30)
-	result := user.Create()
-	fmt.Printf("Created %s in %s\n", user.String("id"), time.Since(start))
+	julia := table.NewRecord()
+	julia.SetString("name", "Julia")
+	julia.SetUint32("age", 30)
+	result := julia.Create()
+	fmt.Printf("%d Created %s in %vs\n", result.Status, julia.String("name"), time.Since(start).Seconds())
 
 	start = time.Now()
 
 	query := table.NewQuery()
-	query.SetString("id", user.String("id"))
+	query.SetString("id", julia.String("id"))
 	result = query.Find()
-	julia := result.Result[0]
+	fmt.Printf("%s is %d year old in %vs\n", result.Result[0].String("name"), result.Result[0].Uint32("age"), time.Since(start).Seconds())
 
-
-	fmt.Printf("%s is %d year old in %s\n", julia.String("name"), julia.Uint32("age"), time.Since(start))
-
-
+	start = time.Now()
+	jules := table.NewRecord()
+	jules.SetString("id", julia.String("id"))
+	jules.SetString("name", "Jules!")
+	result = jules.Update()
+	fmt.Printf("%v in %vs", result, time.Since(start).Seconds())
 
 }

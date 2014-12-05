@@ -1,14 +1,11 @@
 package client
 
 import (
-	//"errors"
 	"github.com/twinj/uuid"
 )
 
-
-
-// Create write a record to the server
-func (record *Record) Create () *Reply {
+// Create writes a new record to the server. If id field was not set it will set a UUID. It returns a Reply
+func (record Record) Create () *Reply {
 
 	// ensure data includes "id" key
 	if _, dataIdExists := record.Data["id"]; !dataIdExists {
@@ -18,7 +15,11 @@ func (record *Record) Create () *Reply {
 
 	record.action = "c"
 
-	reply := transmit(&record.Patient)
-	return reply
+	return transmit(record.Patient)
+}
 
+// Update writes an existing record to the server and returns a Reply
+func (record Record) Update () *Reply {
+	record.action = "u"
+	return transmit(record.Patient)
 }
