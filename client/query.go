@@ -10,3 +10,14 @@ func (query *Query) Find () *Reply {
 	return reply
 
 }
+
+// Delete removes a record from the server
+func (query *Query) Delete () *Reply {
+
+	query.action = "d"
+
+	reply := transmit(query.Patient)
+
+	return reply
+
+}
