@@ -18,11 +18,9 @@ type Command struct {
 }
 
 type Database struct {
-	connection 	*Connection // TODO change to []*Connection to support pooling
+	connection 	*Connection // TODO change to chan *Connection to support pooling
 	name 				string
 }
-
-
 
 type Patient struct {
 	table		*Table
