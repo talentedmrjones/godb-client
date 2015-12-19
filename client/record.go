@@ -4,22 +4,31 @@ import (
 	"github.com/twinj/uuid"
 )
 
+// Record ...
+type Record struct {
+	table  *Table
+	Data   map[string]interface{}
+	action string `default:""`
+}
+
+// Records ...
+type Records []Record
+
+// SetField ...
+func (record Record) SetField(field string, value interface{}) {
+	record.Data[field] = value
+}
+
 // Create writes a new record to the server. If id field was not set it will set a UUID. It returns a Reply
-func (record Record) Create () *Reply {
+func (record Record) Create() {
 
 	// ensure data includes "id" key
-	if _, dataIdExists := record.Data["id"]; !dataIdExists {
+	if _, dataIDExists := record.Data["id"]; !dataIDExists {
 		// if not make it unique
-		record.SetString("id", uuid.NewV4().String())
+		record.SetField("id", uuid.NewV4().String())
 	}
 
 	record.action = "c"
 
-	return transmit(record.Patient)
-}
-
-// Update writes an existing record to the server and returns a Reply
-func (record Record) Update () *Reply {
-	record.action = "u"
-	return transmit(record.Patient)
+	record.table.db.connection.records <- record
 }

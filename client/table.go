@@ -1,24 +1,32 @@
 package client
 
+/*
+Table ...
+*/
+type Table struct {
+	db   *Database
+	name string `default:""`
+}
 
-// TODO support accepting map[string]interface as param
-func (table *Table) NewRecord () Record {
+/*
+NewRecord ...
+*/
+func (table *Table) NewRecord() Record {
 	return Record{
-		Patient{
-			table,
-			make(map[string][]byte),
-			"",
-		},
+		table,
+		make(map[string]interface{}),
+		"",
 	}
 }
 
 // NewQuery returns Query
-func (table *Table) NewQuery () Query {
-	return Query{
-		Patient{
-			table,
-			make(map[string][]byte),
-			"r",
-		},
-	}
-}
+// func (table *Table) NewQuery(connection *Connection) Query {
+// 	return Query{
+// 		Patient{
+// 			connection,
+// 			table,
+// 			make(map[string]interface{}),
+// 			"r",
+// 		},
+// 	}
+// }

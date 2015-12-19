@@ -2,71 +2,113 @@ package client
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/gob"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net"
-
 )
 
-
-func NewConnection (address, port string) (*Connection) {
-
-	conn, err := net.Dial("tcp", address+":"+port)
-	if err!=nil {
-		// handle error here
-	}
-
-	connection := &Connection{conn, make(map[string]chan *Reply)}
-	go connection.receive()
-	return connection
+/*
+Connection ...
+*/
+type Connection struct {
+	socket  net.Conn
+	records chan Record
+	Replies chan *Reply
 }
 
-func (connection *Connection) Database (dbName string) *Database {
+/*
+NewConnection ...
+*/
+func NewConnection(address, port string) *Connection {
+
+	socket, socketErr := net.Dial("tcp", address+":"+port)
+	if socketErr != nil {
+		log.Fatal(socketErr)
+	}
+
+	connection := Connection{socket, make(chan Record), make(chan *Reply)}
+
+	go connection.send()
+	go connection.receive()
+	return &connection
+}
+
+/*
+Database ...
+*/
+func (connection *Connection) Database(dbName string) *Database {
 	return &Database{connection, dbName}
 }
 
 // Receive continuously looks for data from the socket and relays that to a table's command channel
 func (connection *Connection) receive() {
+	fmt.Println("connection listening for replies...")
 	// create a buffered reader
 	buf := bufio.NewReader(connection.socket)
-	defer connection.socket.Close()
+	//defer connection.socket.Close()
 	// loop forever
+
 	for {
-		// read the first 4 bytes
-		dataSizeBytes := make([]byte,4)
+
+		// read the first 4 bytes which will represent a uint32 for the size of the data
+		dataSizeBytes := make([]byte, 4)
 		_, dataSizeReadErr := buf.Read(dataSizeBytes)
 		if dataSizeReadErr != nil {
 			fmt.Printf("dataSizeReadErr: %s\n", dataSizeReadErr)
 			break
 		}
 
-		// convert those 4 bytes to 32 bit unsigned int for size of data to follow
+		// convert those 4 bytes to uint32 for size of data to follow
 		dataSize := binary.BigEndian.Uint32(dataSizeBytes)
 
 		// prepare a buffer to read the data
 		payloadBytes := make([]byte, dataSize)
 		// read a number of bytes equal to the size of the buffer
 		numDataBytes, err := buf.Read(payloadBytes)
-		if uint32(numDataBytes)<dataSize || err != nil {
+		if uint32(numDataBytes) < dataSize || err != nil {
 			// report error here
+			log.Fatal("wrong data size")
 			break
 		}
 		//fmt.Printf("payloadBytes: %v\n", payloadBytes)
 
 		// Create a decoder and receive a value.
 		reply := &Reply{}
-		payloadDecoderBuffer := bytes.NewBuffer(payloadBytes)
-		payloadDecoder := gob.NewDecoder(payloadDecoderBuffer)
 
-		err = payloadDecoder.Decode(reply)
-		if err != nil {
-			fmt.Printf("decode: %s\n", err)
+		payloadBytesUnmarshalErr := json.Unmarshal(payloadBytes, reply)
+		if payloadBytesUnmarshalErr != nil {
+			log.Fatal("payloadBytesUnmarshalErr:", payloadBytesUnmarshalErr)
+			// TODO: report error to connection
 		}
 
-		//fmt.Printf("Reply %#v\n", reply)
+		connection.Replies <- reply
 
-		connection.replies[reply.Id]<- reply
 	}
+}
+
+// send is run in its own goroutine. It continuously loops over replies channel handling replies for that connection
+func (connection *Connection) send() {
+
+	for record := range connection.records {
+		command := NewCommand(record)
+
+		// encode command as JSON string
+		payloadBytes, commandMarshalErr := json.Marshal(command)
+		if commandMarshalErr != nil {
+			fmt.Printf("commandMarshalError %v", commandMarshalErr)
+		}
+
+		// send JSON
+		connection.socket.Write(payloadBytes)
+
+	}
+}
+
+// Close ...
+func (connection *Connection) Close() {
+	close(connection.Replies)
+	close(connection.records)
+	connection.socket.Close()
 }
